@@ -166,3 +166,132 @@ char c = ‘\u0041’\\'A'
 字符串的不可变特性：Java的字符串除了是一个引用类型外，还有个重要特点，就是字符串不可变。
 
 null表示不存在，，即变量不指向任何对象，“”表示空字符串
+
+Java的数组：
+
+- 数组所有元素初始化为默认值，整型都是`0`，浮点型是`0.0`，布尔型是`false`；
+- 数组一旦创建后，大小就不可改变。
+
+数组是**引用类型**，在使用索引访问数组元素时，如果索引超出范围，运行时将报错
+
+```java
+int[] ns=new int[5];
+int[] ns=new int[]{1,2,3,4,5};
+int[] ns = {1,2,3,4,5};
+```
+
+字符串数组
+
+```java
+String[] = {"ds","we","dw"}
+```
+
+输入和输出
+
+```java
+System.out.println()//输出并换行
+System.out.print()//输出不换行
+System.out.printf()//参数格式化
+```
+
+格式化输出
+
+| 占位符 | 说明                             |
+| ------ | -------------------------------- |
+| %d     | 格式化输出整数                   |
+| %x     | 格式化输出十六进制整数           |
+| %f     | 格式化输出浮点数                 |
+| %e     | 格式化输出科学计数法表示的浮点数 |
+| %s     | 格式化字符串                     |
+
+note:%%表示一个%字符，两个%占位符必须传入两个数
+
+```java
+int n = 12345000;
+System.out.printf("n=%d, hex=%08x", n, n); // 注意，两个%占位符必须传入两个数
+```
+
+标准输入流`system.in`标准输出流`system.out`
+
+scanner.nextline()和scanner.nextInt()分别读取用户读取的整数和int
+
+条件语句
+
+判断引用类型的变量内容是否相等，用`equals()`方法，注意避免`NullPointerException`。
+
+if 语句
+
+switch语句
+
+yield关键字
+
+循环语句
+
+`for each`循环
+
+遍历数组，除了常用的方法也可以用`Arrays.toString()方法。`
+
+```java
+int ns[] = {1,2,3,4,5}; 
+System.out.println(Arrays.toString(ns))
+```
+
+二维数组中每个数组元素的长度不要求相同，打印二维数组可以用`Arrays.deepToString()`方法。
+
+#### 面向对象
+
+##### 重载
+
+##### 继承
+
+子类继承父类，自动获得父类的所有字段，子类不能定义与父类重名的字段。
+
+任何类，除了`object`，都会继承自某个类。java只允许一个class继承一个类，一个类有且只有一个父类。`object`没有父类。
+
+父类字段被`private`修饰的，不能被子类所访问。被`protected`修饰的，可以被子类以及子类的子类访问。
+
+`super`表示父类(超类)，子类引用父类的字段时，可以用`super.fieldName`
+
+子类不会继承任何父类的构造方法。如果父类没有默认的构造方法，子类必须显式调用`super`并给出参数以便让编译器定位到弗雷德一个合适的构造方法。
+
+正常情况下，只要一个class没有`final`关键字，任何类都可以继承该class。
+
+java15后，可以用`sealed`修饰class,，并通过`permits`明确写出能够从该类继承的子类名称。
+
+```java
+public sealed class Shape permits Rect, Circle, Triangle {
+    ...
+}
+public final class Rect extends Shape {...}
+public final class Ellipse extends Shape {...}
+// Compile error: class is not allowed to extend sealed class: Shape
+//sealed类在Java 15中目前是预览状态，要启用它，必须使用参数--enable-preview和--source 15
+```
+
+如果一个引用类型是超类，它也可以指向自己子类的实例。
+
+```java
+//向上转型
+class Student extends Person{ ... }
+Person p = new Student();
+
+```
+
+如果把一个父类类型强制转型为子类类型，即向下转型，有可能失败。
+
+```java
+Person p1 = new Student()；
+Person p2 = new Person();
+Student s1 = (Student) p1;
+Student s2 = (Student) p2;//runtime error!ClassCastException
+```
+
+`instanceof`用来判断一个实例是不是某种类型。，如果一个引用类型位null，那么对任何`instanceof`的判断都为`false`。
+
+继承的关系是IS，组合的关系是HAS
+
+##### 多态
+
+`@Override`关键字表示多态，override和overload不同的地方在于，如果方法签名不同，就是重载，如果相同，返回值也相同，就是多态。
+
+https://www.liaoxuefeng.com/wiki/1252599548343744/1260455778791232
