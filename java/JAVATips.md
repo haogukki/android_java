@@ -28,7 +28,7 @@ TCK：Technology Compatibility Kit
 
 有人提议要搞一个基于Java开发的消息服务器，这个提议很好啊，但是光有提议还不行，得贴出真正能跑的代码，这就是RI。如果有其他人也想开发这样一个消息服务器，如何保证这些消息服务器对开发者来说接口、功能都是相同的？所以还得提供TCK。
 
-#### JAV环境设置
+#### JAVA环境设置
 
 https://www.runoob.com/java/java-environment-setup.html
 
@@ -294,4 +294,54 @@ Student s2 = (Student) p2;//runtime error!ClassCastException
 
 `@Override`关键字表示多态，override和overload不同的地方在于，如果方法签名不同，就是重载，如果相同，返回值也相同，就是多态。
 
-https://www.liaoxuefeng.com/wiki/1252599548343744/1260455778791232
+如果在类方法或者类之前加`abstract`关键字，表示抽象方法和抽象类。包含抽象方法的类必须加`abstract`类。
+
+面向抽象编程的本质就是：
+
+- 上层代码只定义规范（例如：`abstract class Person`）；
+- 不需要子类就可以实现业务逻辑（正常编译）；
+- 具体的业务逻辑由不同的子类实现，调用者并不关心。
+
+##### 接口
+
+如果一个抽象类没有字段，所有方法全部都是抽象方法，就可以把该抽象类改写为接口：`interface`。
+
+`interface`，就是比抽象类还要抽象的纯抽象接口，因为它连字段都不能有。
+
+当一个具体的`class`去实现一个`interface`时，需要使用`implements`关键字。
+
+一个类可以实现多个`interface`
+
+<img src="pics/interface1.png" width = "100%" alt="interface1"/>
+
+<img src="pics/interfacestructure.png" width = "100%" alt = "interfacestructure1" />
+
+```java
+List list = new ArrayList(); // 用List接口引用具体子类的实例
+Collection coll = list; // 向上转型为Collection接口
+Iterable it = coll; // 向上转型为Iterable接口
+```
+
+一般来说，公共逻辑适合放在`abstract class`中，具体逻辑放到各个子类，而接口层次代表抽象程度。
+
+在接口中,`default`修饰的方法无法访问字段,实现类可以不必覆写`default`修饰的方法
+
+`default`方法的目的是，当我们需要给接口新增一个方法时，会涉及到修改全部子类。如果新增的是`default`方法，那么子类就不必全部修改，只需要在需要覆写的地方去覆写新增方法。
+
+`static`字段不属于任何一个实例.
+
+*不推荐用`实例变量.静态字段`去访问静态字段，因为在Java程序中，实例对象并没有静态字段。在代码中，实例对象能访问静态字段只是因为编译器可以根据实例类型自动转换为`类名.静态字段`来访问静态对象。推荐用类名来访问静态字段。可以把静态字段理解为描述`class`本身的字段（非实例字段）*。
+
+通常情况下，通过实例变量访问静态字段和静态方法，会得到一个编译警告.
+
+`interface`的静态字段必须为`final`类型：
+
+`package`没有父子关系,包名不同,即使类名相同也是不同的类。
+
+==<u>编译语言注意</u>==
+
+```java
+javac -d ../bin ming/Person.java hong/Person.java mr/jun/Arrays.java
+```
+
+https://www.liaoxuefeng.com/wiki/1252599548343744/1260467032946976
