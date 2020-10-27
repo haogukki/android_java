@@ -314,7 +314,7 @@ Student s2 = (Student) p2;//runtime error!ClassCastException
 
 <img src="pics/interface1.png" width = "100%" alt="interface1"/>
 
-<img src="pics/interfacestructure.png" width = "100%" alt = "interfacestructure1" />
+<img src="pics/interfacestructure.png" width = "80%" alt = "interfacestructure1" />
 
 ```java
 List list = new ArrayList(); // 用List接口引用具体子类的实例
@@ -345,3 +345,94 @@ javac -d ../bin ming/Person.java hong/Person.java mr/jun/Arrays.java
 ```
 
 https://www.liaoxuefeng.com/wiki/1252599548343744/1260467032946976
+
+嵌套类：定义在一个class内部的class成为嵌套类(nested class),nested类的实例不能单独存在，必须依附于一个外部类的实例。
+
+匿名类
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Outer outer = new Outer("Nested");
+        outer.asyncHello();
+    }
+}
+
+class Outer {
+    private String name;
+
+    Outer(String name) {
+        this.name = name;
+    }
+
+    void asyncHello() {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Hello, " + Outer.this.name);
+            }
+        };
+        new Thread(r).start();
+    }
+}
+
+```
+
+匿名类和Inner Class一样，可以访问Outer Class的`private`字段和方法。之所以我们要定义匿名类，是因为在这里我们通常不关心类名，比直接定义Inner Class可以少写很多代码。
+
+除了接口外，匿名类也完全可以继承自普通类。
+
+使用局部变量时，应该尽可能把局部变量的作用域缩小，尽可能延后声明局部变量。
+
+用`final`修饰`class`可以阻止被继承,用`final`修饰`method`可以阻止被子类覆写,用`final`修饰`field`可以阻止被重新赋值,用`final`修饰局部变量可以阻止被重新赋值.
+
+一个`.java`文件只能包含一个`public`类，但可以包含多个非`public`类。如果有`public`类，文件名必须和`public`类的名字相同。
+
+用`static`修饰的内部类和Inner Class有很大的不同，它不再依附于`Outer`的实例，而是一个完全独立的类，因此无法引用`Outer.this`，但它可以访问`Outer`的`private`静态字段和静态方法。如果把`StaticNested`移到`Outer`之外，就失去了访问`private`的权限。
+
+#### JAVA核心类
+
+##### String
+
+String是一个引用类型，本身也是一个class,可以直接用“...”表示一个字符串。
+
+在内部通过char[]数组实现
+```java
+String s2 = new String(new char[] {'H','e','l','l','o'});
+string s1 = "Hello";
+```
+
+```java
+equals() //比较两个String是否相等用,而不是==,
+equalsIgnoreCae()//比较string忽略大小写
+contains()//来判断是否包含子串，方法参数是String的父类CharSequence
+indexOf() //判断字串的第一次出现位置
+LastIndexOf()//判断字串的最后一次出现位置
+startsWith()//判断是否是以字串开头
+endsWith()//判断是否是以字串结尾
+substring()//一个参数是到结尾，两个参数是之间的字串
+trim()//返回一个新的字符串，移除字符串首尾空白字符，包括空格,\t,\r,\n
+strip()//移除字符串首尾空白字符包括空格字符\u3000
+stripLeading()//只删除字符串开头的空格
+stripTrailing()//只删除字符串的结尾的空格
+replace()//用新字符替换所有目标字符
+replaceAll()//将所有匹配的字符替换为新字符,正则表达式作为输入，以标识需要替换的目标子字符
+replaceFirst()//用新字符串替换目标字符串第一次出现的字符
+isEmpty()//判断空字符串
+isBlank()//判断空字符
+spilt()//分割字符串，传入正则表达式
+join()//静态方法，拼接字符串，用指定的字符串连接字符串数组
+```
+
+转义符
+
+| `\t`     | 水平制表符相当于TAB键                  |
+| -------- | -------------------------------------- |
+| `\n`     | 回车换行，将当前位置移动到下一行的开头 |
+| `\r`     | 回车，将当前位置移动到本行的开头       |
+| `\u3000` | 拳脚空格，中文文章中使用               |
+
+
+
+
+
