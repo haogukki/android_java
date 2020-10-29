@@ -296,6 +296,24 @@ Student s2 = (Student) p2;//runtime error!ClassCastException
 
 如果在类方法或者类之前加`abstract`关键字，表示抽象方法和抽象类。包含抽象方法的类必须加`abstract`类。
 
+@Override可以让编译器检查是否进行了正确的覆写。
+
+**多态是指，针对某个类型的方法调用，其真正执行的方法取决于运行时期实际类型的方法。**
+
+多态的特性就是，运行期才能动态决定调用的子类方法。对某个类型调用某个方法，执行的实际方法可能是某个子类的覆写方法。
+
+object类定义了几个重要的方法
+
+```java
+toString():把instance输出为string
+equals():判断两个实例是否逻辑相等
+hashCode(）计算实例的哈希值
+```
+
+必要时可以覆写这几个方法
+
+被final修饰的父类方法不可以被子类继承，被final修饰的类不能被继承，被final修饰的字段在初始化后不能被重新赋值
+
 面向抽象编程的本质就是：
 
 - 上层代码只定义规范（例如：`abstract class Person`）；
@@ -422,6 +440,14 @@ isEmpty()//判断空字符串
 isBlank()//判断空字符
 spilt()//分割字符串，传入正则表达式
 join()//静态方法，拼接字符串，用指定的字符串连接字符串数组
+foamatted()//传入其他参数，替换占位符，生成新字符串,在idea中报错，信息为某个API的一个预览功能 
+format()//静态方法，替换占位符，生成新字符串 
+ValueOf()//静态方法，把任意基本类型或引用类型转换为字符串 
+Integer.parseInt()//静态方法把字符串转换为int类型 
+Boolean.parseBoolean()//静态方法，字符串->bool 
+Integer.getInteger()//静态方法，把字符串对应的系统变量转换为
+Integer toCharArray()//string->char[] String(char[])的构造函数可以把char[]作为参数，通过把char[]复制一遍再传入实例内部，构造函数可能用了clone()方法 getByte()//传递编码，将字符串转换为其他编码格式，得到byte[]数组 
+String(byte[]，"encode")//将已知编码的byte[]转换成string
 ```
 
 转义符
@@ -432,7 +458,442 @@ join()//静态方法，拼接字符串，用指定的字符串连接字符串数
 | `\r`     | 回车，将当前位置移动到本行的开头       |
 | `\u3000` | 拳脚空格，中文文章中使用               |
 
+占位符
 
+| %s   | 显示字符串       |
+| ---- | ---------------- |
+| %d   | 显示整数         |
+| %x   | 显示十六进制整数 |
+| %f   | 显示浮点数       |
+
+###### 字符编码
+
+- ACSII 码范围，0-127，最高位为0
+
+- GB2312码，两个字节表示一个汉字，第一个字节的最高位为1
+
+- Unicode编码 
+
+- utf-8:Unicode的一种改进一种变长编码，用来把固定长度的Unicode编码变成1～4字节的变长编码。
+
+**Java的`String`和`char`在内存中总是以Unicode编码表示**。
+
+早期JDK版本的`String`用`char[]`存储，新版本存储`byte[]`，节省内存。如果String仅包含ASCII字符，则每个`byte`存储一个字符，否则，每两个`byte`存储一个字符。大量的长度较短的`String`通常仅包含ASCII字符
+
+##### StringBuilder
+
+在循环里通过`+`拼接`String`,会产生大量的临时对象，然后扔掉旧的字符串，浪费内存，降低GC效率。StringBuilder可以预分配缓冲区，不创建新的临时对象，通过append()方法直接拼接String，且支持链式操作
+
+若想让类方法支持链式操作，在类方法里面返回this指针
+
+对于普通的字符串+操作，并不需要我们将其改写为StringBuilder，因为Java编译器在编译时就自动把多个连续的+操作编码为StringConcatFactory的操作。在运行期，StringConcatFactory会自动把字符串连接操作优化为数组复制或者StringBuilder操作。
+
+`StringBuffer`，这是Java早期的一个`StringBuilder`的线程安全版本，它通过同步来保证多个线程操作`StringBuffer`也是安全的，但是同步会带来执行速度的下降。`StringBuilder`和`StringBuffer`接口完全相同，现在完全没有必要使用`StringBuffer`。
+
+##### StringJoiner
+
+用分隔符拼接数组可以指定分隔符以及开头和结尾
+
+```java
+String.join()//在不指定开头和结尾时会更方便
+```
+
+##### 包装类型
+
+java 基本类型：`byte、short、 int、 long、 boolean、 float、 double、 char`
+
+引用类型：`class、interface`
+
+**为什么java要有包装类型**
+
+引用类型可以赋值为null，基本类型不能赋值为null
+
+每种基本类型都对应了一种包装类型
+
+| boolean | java.lang.Boolean  |
+| ------- | ------------------ |
+| byte    | java.lang.Byte     |
+| int     | java.lang.Interger |
+| short   | java.lang.Short    |
+| char    | java.lang.Char     |
+| double  | java.lang.Double   |
+| float   | java.lang.Float    |
+| long    | java.lang.Long     |
+
+**Auto Boxing** 和**Auto UnBoxing**，自动装箱和自动拆箱只发生在**编译阶段**，目的是为了少写代码。
+
+引用类型不能用`==`比较，用`equals()`方法
+
+Integer是不变类，编译器把Integer x = 127;自动变为Integer x = Integer.valueOf(127);，为了节省内存，Integer.valueOf()对于较小的数(-128-127)，始终返回相同的实例
+
+创建Integer时，用
+
+```java
+Integer n = Integer.valueOf(100)//首选。将内部优化交给Integer的实现 
+Integer n = new Integer(199)//总是创建新的实例
+```
+
+Integer.valueOf()就是静态工厂方法，它尽可能地返回缓存的实例以节省内存。创建新对象时，优先选用静态工厂方法而不是new操作符。
+
+标准库返回的Byte实例全部是缓存实例，但调用者并不关心静态工厂方法以何种方式创建新实例还是直接返回缓存的实例。
+
+```java
+Integer.parseInt()//静态方法，将字符串解析为整数，可以指定进制 
+Integer.toString()//静态方法，转化为字符串，可以指定进制 
+Integer.toHexString()//静态方法，转化为字符串，表示为16进制
+Integer.toOctalString()//静态方法，转化为字符串，表示为8进制
+Integer.toBinaryString()//静态方法，转化为字符串，表示为2进制
+```
+
+我们经常使用的System.out.println(n);是依靠核心库自动把整数格式化为10进制输出并显示在屏幕上。
+
+JAVA的和核心库还定义了一些静态变量
+
+```java
+// boolean只有两个值true/false，其包装类型只需要引用Boolean提供的静态字段: 
+Boolean t = Boolean.TRUE; 
+Boolean f = Boolean.FALSE; 
+// int可表示的最大/最小值: 
+int max = Integer.MAX_VALUE; // 2147483647
+int min = Integer.MIN_VALUE; // -2147483648
+// long类型占用的bit和byte数量:
+int sizeOfLong = Long.SIZE; // 64 (bits) 
+int bytesOfLong = Long.BYTES; // 8 (bytes)
+```
+
+在java中无符号整形与有符号整形的转换就需要借助包装类型的静态方法完成。
+
+##### JavaBean
+
+一种符合命名规范的class
+
+特点：
+
+- 有若干private字段
+- 通过public方法读写实例字段
+
+JavaBean类只有**getter**和**setter**方法(对应boolean字段是is和set),也称之为**属性**
+
+用途：传递数据
+
+使用java核心库提供的Introspector可以枚举一个JavaBean的所有属性。
+
+```java
+BeanInfo info = Introspector.getBeanInfo(Person.class);
+for (PropertyDescriptor pd : info.getPropertyDescriptors()) {    
+	System.out.println(pd.getName());    
+	System.out.println("  " + pd.getReadMethod());    
+	System.out.println("  " + pd.getWriteMethod()); 
+} 
+/*
+*age 
+* public int Person.getAge() 
+* public void Person.setAge(int) 
+*class 
+* public final native java.lang.Class java.lang.Object.getClass() 
+* null 
+*name 
+* public java.lang.String Person.getName() 
+* public void Person.setName(java.lang.String) 
+*/
+```
+
+
+
+##### 枚举类
+
+enum关键字
+
+不同类型的枚举不能互相比较或者赋值，可以用==比较，枚举类不能被继承，不能通过new创建，每个实例时引用类型的唯一实例
+
+```java
+name()//返回常量名
+original()//返回定义常量的顺序
+```
+
+为了使得外部不能修改enum的顺序，可以将构造函数定义为private,在新增枚举常量是，也需要制定额外的信息
+
+```java
+public class Main {    
+    public static void main(String[] args) {        
+        Weekday day = Weekday.SUN;        
+        if (day.dayValue == 6 || day.dayValue == 0) {            
+            System.out.println("Today is " + day + ". Work at home!"); 
+        } else {            
+            System.out.println("Today is " + day + ". Work at office!");
+        }    
+    } 
+} 
+enum Weekday {    
+    MON(1, "星期一"), TUE(2, "星期二"), WED(3, "星期三"), THU(4, "星期四"), FRI(5, "星期五"), SAT(6, "星期六"), SUN(0, "星期日");
+    public final int dayValue;    
+    private final String chinese;     
+    private Weekday(int dayValue, String chinese) {        
+        this.dayValue = dayValue;        
+        this.chinese = chinese;    
+    } 
+    //覆写toString 方法，打印的时候更好的输出信息    
+    @Override    
+    public String toString() {        
+        return this.chinese;    
+    } 
+}
+```
+
+枚举类很适合用在switch中
+
+##### 记录类 
+
+不变类的特点
+
+定义class的时候用final，无法派生子类
+
+每个字段使用final,保证创建实例后无法修改任何字段
+
+```java
+public record Point(int x, int y) {}//定义了一个Point不变类
+```
+
+在构造方法如果需要检查参数，需要在类的构造方法加上检查逻辑
+
+```java
+//Point类的x,y不允许负数 
+//Compact Constructor 
+public record Point(int x, int y) {    
+	public Point {        
+		if (x < 0 || y < 0) {            
+    		throw new IllegalArgumentException();        
+		}    
+	} 
+}
+```
+
+Point也可以加入静态方法，常用的是of()方法，用来创建record类Point
+
+```java
+public record Point(int x, int y) {    
+    public static Point of() {        
+        return new Point(0, 0);    
+    }    
+    public static Point of(int x, int y) {       
+        return new Point(x, y);    
+    } 
+} //调用 var z = Point.of(); var p = Point.of(123, 456);
+```
+
+##### BigInteger类
+
+表示任意大小的整数
+
+CPU原生提供的整型最大范围是64位long型整数，使用long型整数可以直接通过cpu指令计算
+
+BigInteger内部用int[]模拟一个非常大的整数
+
+BingInteger的运算只能用实例方法，运算速度较慢
+
+BigInteger继承自Number类，可以转换为基本类型，如果超过基本类型范围，高位信息将丢失，如果要准确转换，在超出范围时，会直接抛出ArithemeticException异常
+
+##### BigDecimal
+
+表示任意大小且精度完全准确的浮点数
+
+```java
+scale()//表示小数点位数，返回负数-n，表示这个数为整数，且末尾有n个0 
+stripTrailingZeros()//可以将一个BigDecimal格式转化成为一个相等的，但是去掉末尾0的BigDecimal
+```
+
+对BigDecimal做除法的时候，需要指定精度以及如何截断。
+
+```java
+divideAndReminder()//同时计算商和余数 compareTo()/比较两个BigDecimal大小是否相同，正数、负数、0分别表示大于、小于、0
+```
+
+BigDecimal用一个BigInteger和int分别表示整数和小数位数。
+
+##### Math类和StrichMath类
+
+Java标准库还提供了一个StrictMath，它提供了和Math几乎一模一样的方法。这两个类的区别在于，由于浮点数计算存在误差，不同的平台（例如x86和ARM）计算的结果可能不一致（指误差不同），因此，StrictMath保证所有平台计算结果都是完全相同的，而Math会尽量针对平台优化计算速度，所以，绝大多数情况下，使用Math就足够了。
+
+##### Random类
+
+```java
+Random r = new Random();//指定seed，得到一个完全确定的随机数序列，不指定seed，以当前时间戳作为种子 
+r.nextInt(); // 2071575453,每次都不一样 
+r.nextInt(10); // 5,生成一个[0,10)之间的
+int r.nextLong(); // 8811649292570369305,每次都不一样 
+r.nextFloat(); // 0.54335...生成一个[0,1)之间的float 
+r.nextDouble(); // 0.3716...生成一个[0,1)之间的double
+```
+
+真正的真随机数只能通过量子力学原理来获取
+
+###### SecureRandom类
+
+无法指定种子，使用random number generator(RNG)算法，有多种不同的底层实现
+
+```java
+//先使用高等级安全随机数，再使用低等级安全随机数 
+SecureRandom sr = null; try {    
+    sr = SecureRandom.getInstanceStrong(); 
+} catch (NoSuchAlgorithmException e) {    
+    sr = new SecureRandom(); 
+} 
+//将生成随机数放到byte[]数组
+byte[] buffer = new byte[16]; 
+sr.nextBytes(buffer); 
+System.out.println(Arrays.toString(buffer));
+```
+
+
+
+#### 异常处理
+
+调用方法获知调用失败的信息方法;1 预定返回错误码2异常处理机制
+
+在java中，异常也是一种类，继承关系
+
+<img src ="pics/exception-class.png" width ="70%" alt="exception-class"/>
+
+<img src="pics/exception.png" width ="30%" alt ="exception">
+
+Error表示严重的错误，包括: 
+
+- OutmemoryError(内存耗尽)
+- NoClassDefFoundError(无法加载某个class)
+- StackOverflowError(栈溢出)
+
+Exeception运行时的错误，可以被捕获处理，包括
+
+- NumberFormatExeception(数值类型格式错误)
+- FileNotFoundException(未找到文件)
+- SocketException(读取网络失败)
+- nullPointerException(对nul对象调用方法或字段)
+- IndexOutOfBoundsException(数组越界)
+
+Exception分两类，RuntimeException和非RuntimeException(包括IoException、ReflectiveOperationException)
+
+必须捕获的异常包括Exception及其子类，不包括RuntimeException及其子类->Checked Exception，不需要捕获的异常包括Error及其子类，RuntimeException
+
+异常的捕获用try catch
+
+在方法定义的时候，使用throws Xxx表示该方法可能抛出的异常类型。调用方在调用的时候，必须强制捕获这些异常，否则编译器会报错。
+
+也可在main方法后声明`throws Exception`，代价是出现任何异常，程序会立刻退出
+
+不要再try catch里面啥也不干，可以先用printStackTrace打印异常
+
+try catch可使用多个catch语句，但只匹配一个catch,存在多个catch的情况时，将子类写在前面。try catch语句后可以加finally语句，最后执行，可写可不写。
+
+可以用|将多个异常放在同一个catch语句里
+
+当某个方法抛出了异常时，如果当前方法没有捕获异常，异常就会被抛到上层调用方法，直到遇到某个try ... catch被捕获为止：
+
+如果一个方法捕获了某个异常后，又在catch子句中抛出新的异常，就相当于把抛出的异常类型“转换”了：
+
+```java
+void process1(String s) {    
+	try {        
+		process2();    
+	} catch (NullPointerException e) {        
+		throw new IllegalArgumentException();    
+    } 
+} 
+void process2(String s) {   
+    if (s==null) {        
+        throw new NullPointerException();    
+    } 
+}
+//当process2()抛出NullPointerException后，被process1()捕获，然后抛出IllegalArgumentException()
+```
+
+catch中抛出异常，不会影响finally的执行。JVM会先执行finally，然后抛出异常。
+
+异常屏蔽;zai执行finally语句抛出异常，catch语句准备抛出的异常找不到了。
+
+通过origin变量保存原始一场，然后调用Throwable.addSuppressed()添加原始一场，最后在finally抛出
+
+```java
+public class Main {    
+    public static void main(String[] args) throws Exception {        
+        Exception origin = null;        
+        try {            
+            System.out.println(Integer.parseInt("abc"));        
+        } 
+        catch (Exception e) {            
+            origin = e;            
+            throw e;        
+        } finally {            
+            Exception e = new IllegalArgumentException();            
+            if (origin != null) {                
+                e.addSuppressed(origin);            
+            }            
+            throw e;        
+        }    
+    } 
+}
+```
+
+绝大多数情况下，在finally中不要抛出异常。
+
+e.printStackTrace()//打印异常栈，但不中断后续程序 throw e//中断程序并抛出异常
+
+Java自定义异常栈包括：
+
+<img src="pics/exception.png" width="30%" alt="exception"/>
+
+也可以自定义异常栈，自定义一个BaseException作为“根异常”，然后，派生出各种业务类型的异常。BaseException通常建议从RuntimeException派生：
+
+其他业务类型的异常就可以从BaseException派生，自定义的BaseException应该提供多个构造方法。
+
+NullPointerException空指针异常，NPE，如果一个对象为null，调用其方法或访问其字段就会产生NullPointerException，这个异常通常是由JVM抛出的
+
+NullPointerException是一种代码逻辑错误，遇到NullPointerException，遵循原则是早暴露，早修复，严禁使用catch来隐藏这种编码错误
+
+避免NPE:
+
+```java
+//成员变量定义初始化 
+public class Person {    
+	private String name = ""; 
+} 
+//返回空字符串 
+public String[] readLinesFromFile(String file) {    
+    if(getFileSize(file) == 0) {        
+        return new String[0];    
+    } 
+} 
+//如果调用方一定要根据null判断，比如返回null表示文件不存在，那么考虑返回Optional<T>： 
+public Optional<String> readLineFromFile(String file) {   
+    if(!fileExist(file)) {       
+        return Optional.empty();        
+        ...    
+    } 
+}
+```
+
+定位NPE
+
+```shell
+java -XX:+ShowCodeDetailsInExceptionMessages Main.java//jdk14后
+```
+
+或者在可能的地方打印日志，pintln()
+
+###### 断言assert
+
+```java
+public static void main(String[] args) {    
+    double x = Math.abs(-123.45);    
+    assert x >= 0 : "x must >= 0";    
+    System.out.println(x); 
+}
+```
+
+断言应用在开发和调试阶段，断言失败，抛出AssertionError
+
+要执行assert语句，必须给Java虚拟机传递-enableassertions（可简写为-ea）参数启用断言。断言很少被使用，更好的方法是编写单元测试
+
+idea 设置jvm参数run->editConfigurations->vm options
 
 
 
