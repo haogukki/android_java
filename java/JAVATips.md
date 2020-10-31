@@ -895,5 +895,356 @@ public static void main(String[] args) {
 
 idea 设置jvm参数run->editConfigurations->vm options
 
+#### LOG
+JDK日志规定了7个级别,从严重到普通
+- SEVERE
+- WARNING
+- INFO,默认级别，以下级别的日志不打印
+- CONFIG
+- FINE
+- FINER
+- FINEST
+
+```java
+public static void main(String[] args) throws Exception {
+        System.out.println(Logger.getGlobal());//全局记录器
+        System.out.println(Logger.getLogger(""));//
+        System.out.println(Logger.getGlobal().getParent());//跟记录器
+}
+
+//输出
+java.util.logging.Logger@34a245ab
+java.util.logging.LogManager$RootLogger@7cc355be
+java.util.logging.LogManager$RootLogger@7cc355be
+/*根记录器是全局记录器的父级。根记录器用于将级别传播到子记录器，
+* 并用于容纳可以捕获所有已发布日志记录的处理程序。
+* 全局记录器只是保留给因果使用的命名记录器。
+* 它是日志记录框架的System.out，因此仅用于丢弃代码。
+* Logger::getLogger的name参数为空字符串根记录器？
+*/
+```
+
+Common Logging + Log4j
+Common Logging 可以挂接不同的日志系统，并通过配置文件指定挂接的日志系统。默认情况下，Commons Loggin自动搜索并使用Log4j（Log4j是另一个流行的日志系统），如果没有找到Log4j，再使用JDK Logging。
+
+<img src="pics/log4j.png" width="80%" alt ="log4j">
+
+#### 反射Reflection
+程序在运行期间可以拿到一个对象的所有信息，反射是为了解决程序在运行期，对某个实例一无所知的情况下，如何调用其方法。
+
+一个叫Class的类，通过Class实例获取class信息的方法称为**反射**
+
+class(interface)的本质是数据类型，无继承关系的数据类型无法赋值。
+class是由JVM在执行过程中动态加载的，JVM在第一次读取到一种class类型时，将其加载进内存。每加载一种class,JVM为其创建一个Class类型的实例
+```java
+public final class Class {
+    private Class {}
+}
+```
+以String类为例，当JVM加载String类时，它首先读取String.class文件到内存，然后，为String类创建一个Class实例并关联起来。
+
+Class类的构造方法是private，只有JVM能创建Class实例，我们自己的Java程序是无法创建Class实例的。
+
+JVM持有的每个Class实例都指向一个数据类型（class或interface）：
+
+<img src = "pics/class-field.png" width = "50%" alt ="class field">
+
+获取一个class的Class实例方法
+```
+//直接通过一个class的静态变量class获取
+Class cls = String.class;
+//通过一个实例变量提供的getClass()方法获取
+String s = "hello";
+Class cls = s.getClass();
+//通过静态方法Class.forName()获取
+Class cls = Class.forName("java.lang.String");
+//以上获取的Class实例同一个实例，可以用==比较两个Class实例
+```
+instanceof可以匹配指定的类型，还可以匹配指定类型的子类，用`==`判断class实例可以精确判断数据类型，但是不能作子类型比较。通常情况下，用instanceof判断数据类型。只有在需要精确判断一个类型是不是某个class的时候，才使用`==`判断class实例。
+
+数组也是一种类，String[] 的类名是`[Ljava.lang.Strin`
+
+```java
+//从Class实例获取类的基本信息
+public class Main {
+    public static void main(String[] args) {
+        printClassInfo("".getClass());
+        printClassInfo(Runnable.class);
+        printClassInfo(java.time.Month.class);
+        printClassInfo(String[].class);
+        printClassInfo(int.class);
+    }
+
+    static void printClassInfo(Class cls) {
+        System.out.println("Class name: " + cls.getName());
+        System.out.println("Simple name: " + cls.getSimpleName());
+        if (cls.getPackage() != null) {
+            System.out.println("Package name: " + cls.getPackage().getName());
+        }
+        System.out.println("is interface: " + cls.isInterface());
+        System.out.println("is enum: " + cls.isEnum());
+        System.out.println("is array: " + cls.isArray());
+        System.out.println("is primitive: " + cls.isPrimitive());
+    }
+}
+```
+##### 动态加载
+Java在执行Java程序的时候，在第一次需要用到class时才加载，而不是一次性把所有的class加载到内存。
+```java
+// Main.java
+public class Main {
+    public static void main(String[] args) {
+        if (args.length > 0) {
+            create(args[0]);
+        }
+    }
+
+    static void create(String name) {
+        Person p = new Person(name);
+    }
+}
+```
+当执行Main.java时，由于用到了Main，因此，JVM首先会把Main.class加载到内存。然而，并不会加载Person.class，除非程序执行到create()方法，JVM发现需要加载Person类时，才会首次加载Person.class。如果没有执行create()方法，那么Person.class根本就不会被加载。
+
+利用JVM动态加载class的特性，我们才能在运行期根据条件加载不同的实现类。
+
+对任意的一个Object实例，只要我们获取了它的Class，就可以获取它的一切信息。
+```
+Field getField(name)：根据字段名获取某个public的field（包括父类）
+Field getDeclaredField(name)：根据字段名获取当前类的某个field（不包括父类）
+Field[] getFields()：获取所有public的field（包括父类）
+Field[] getDeclaredFields()：获取当前类的所有field（不包括父类）
+```
+
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Class stdClass = Student.class;
+        // 获取public字段"score":
+        System.out.println(stdClass.getField("score"));
+        // 获取继承的public字段"name":
+        System.out.println(stdClass.getField("name"));
+        // 获取private字段"grade":
+        System.out.println(stdClass.getDeclaredField("grade"));
+    }
+}
+
+class Student extends Person {
+    public int score;
+    private int grade;
+}
+
+class Person {
+    public String name;
+}
+/*
+public int Student.score
+public java.lang.String Person.name
+private int Student.grade
+*/
+```
+##### 访问字段
+一个field对象包括了一个字段的所有信息
+
+- getName()：返回字段名称，例如，"name"；
+- getType()：返回字段类型，也是一个Class实例，例如，String.class；
+- getModifiers()：返回字段的修饰符，它是一个int，不同的bit表示不同的含义
+```
+public final class String {
+    private final byte[] value;
+}
+
+Field f = String.class.getDeclaredField("value");
+f.getName(); // "value"
+f.getType(); // class [B 表示byte[]类型
+int m = f.getModifiers();
+Modifier.isFinal(m); // true
+Modifier.isPublic(m); // false
+Modifier.isProtected(m); // false
+Modifier.isPrivate(m); // true
+Modifier.isStatic(m); // false 
+```
+除了获取字段对应的field对象,还可以获取一个实例对应的该字段的值
+```
+Object p = new Person("Xiao Ming");
+        Class c = p.getClass();
+        Field f = c.getDeclaredField("name");
+        f.setAccessible(true);//运行访问private和protected类型字段
+        Object value = f.get(p);
+        System.out.println(value); // "Xiao Ming"
+
+class Person {
+    private String name;
+
+    public Person(String name) {
+        this.name = name;
+    }
+}
+
+```
+如果使用反射可以获取private字段的值，那么类的封装还有什么意义？
+正常情况下，我们总是通过p.name来访问Person的name字段，编译器会根据public、protected和private决定是否允许访问字段，这样就达到了数据封装的目的。
+反射的意义：反射是一种非常规的用法，使用反射，首先代码非常繁琐，其次，它更多地是给工具或者底层框架来使用，目的是在不知道目标实例任何信息的情况下，获取特定字段的值。
+setAccessible(true)可能会失败。如果JVM运行期存在SecurityManager，那么它会根据规则进行检查，有可能阻止setAccessible(true)。例如，某个SecurityManager可能不允许对java和javax开头的package的类调用setAccessible(true)，这样可以保证JVM核心库的安全。
+https://blog.csdn.net/qq_36470686/article/details/85015753
+
+https://blog.csdn.net/u013915286/article/details/106076235
+
+除了查看，Field也可以设置字段的值
+set()方法
+
+##### 调用方法
+获取method方法的方法
+- Method getMethod(name, Class...)：获取某个public的Method（包括父类）
+- Method getDeclaredMethod(name, Class...)：获取当前类的某个Method（不包括父类）
+- Method[] getMethods()：获取所有public的Method（包括父类）
+- Method[] getDeclaredMethods()：获取当前类的所有Method（不包括父类）
+- 
+具体使用方法和Field一样
+
+一个Method对象包含一个方法的所有信息：
+- getName()：返回方法名称，例如："getScore"；
+- getReturnType()：返回方法返回值类型，也是一个Class实例，例如：String.class；
+- getParameterTypes()：返回方法的参数类型，是一个Class数组，例如：{String.class, int.class}；
+- getModifiers()：返回方法的修饰符，它是一个int，不同的bit表示不同的含义。
+
+对Method实例调用invoke就相当于调用该方法，invoke的第一个参数是对象实例，即在哪个实例上调用该方法，后面的可变参数要与方法参数一致，否则将报错。
+
+如果获取到的Method表示一个静态方法，调用静态方法时，由于无需指定实例对象，所以invoke方法传入的第一个参数永远为null。
+
+和Field类似，对于非public方法，我们虽然可以通过Class.getDeclaredMethod()获取该方法实例，但直接对其调用将得到一个IllegalAccessException。为了调用非public方法，我们通过Method.setAccessible(true)允许其调用
+
+使用反射调用方法时，仍然遵循多态原则：即总是调用实际类型的覆写方法（如果存在）
+
+##### 调用构造方法
+```Person p =Person.class.newInstance()
+//只能调用该类的public无参数构造方法。如果构造方法带有参数，
+或者不是public，就无法直接通过Class.newInstance()来调用
+```
+
+Java的反射API提供了Constructor对象，它包含一个构造方法的所有信息，可以创建一个实例。Constructor对象和Method非常类似，不同之处仅在于它是一个构造方法，并且，调用结果总是返回实例
+
+通过Class实例获取Constructor的方法如下：
+
+- getConstructor(Class...)：获取某个public的Constructor；
+- getDeclaredConstructor(Class...)：获取某个Constructor；
+- getConstructors()：获取所有public的Constructor；
+- getDeclaredConstructors()：获取所有Constructor。
+注意Constructor总是当前类定义的构造方法，和父类无关，因此不存在多态的问题。
+
+调用非public的Constructor时，必须首先通过setAccessible(true)设置允许访问。setAccessible(true)可能会失败。
+
+##### 获取继承关系
+
+```
+Class cls = String.class; // 获取到String的Class
+
+String s = "";
+Class cls = s.getClass(); // s是String，因此获取到String的Class
+
+Class s = Class.forName("java.lang.String");//传入Class的完整类名获取
+
+s.getSuperclass()//得到String类的父类
+
+getInterfaces();
+```
+
+通过Class可以直接查询到实现的接口类型。
+
+```
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Class s = Integer.class;
+        Class[] is = s.getInterfaces();
+        for (Class i : is) {
+            System.out.println(i);
+        }
+    }
+}
+/*
+interface java.lang.Comparable
+interface java.lang.constant.Constable
+interface java.lang.constant.ConstantDesc
+*/
+/
+```
+
+getInterfaces()只返回当前类直接实现的接口类型，并不包括其父类实现的接口类型
+
+对所有interface的Class调用getSuperclass()返回的是null，获取接口的父接口要用getInterfaces()
+
+如果一个类没有实现任何interface，那么getInterfaces()返回空数组。
+
+判断一个实例是否是某个类型时，正常情况下，使用instanceof操作符：
+
+如果是两个Class实例，要判断一个向上转型是否成立，可以调用isAssignableFrom()
+
+##### 动态代理
+
+class和interface的区别
+- 可以实例化class(非abstract)
+- interface不可以实例化
+
+所有interface类型的变量总是通过向上转型并指向某个实例的：
+
+* 抽象类和接口区别 *
+
+静态代理是如何写一个类的：定义接口，编写实现类，创建实例转型为接口并调用
+动态代理：定义接口，基于Proxy.newProxyInstance()创建一个接口对象，
+
+
+在运行期动态创建一个interface实例的方法如下：
+```java
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+
+public class Hello {
+    public static void main(String[] args) {
+        InvocationHandler handler = new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                System.out.println(method);
+                if (method.getName().equals("morning")) {
+                    System.out.println("good morning, " + args[0]);
+                }
+                return null;
+            }
+        };
+        Hi hi = (Hi) Proxy.newProxyInstance(
+                Hi.class.getClassLoader(),
+                new Class[] {Hi.class},
+                handler);
+        hi.morning("Bob");
+    }
+}
+interface Hi {
+    void morning (String name);
+}
+
+//对应静态实现类
+public class HelloDynamicProxy implements Hello {
+    InvocationHandler handler;
+    public HelloDynamicProxy(InvocationHandler handler) {
+        this.handler = handler;
+    }
+    public void morning(String name) {
+        handler.invoke(
+           this,
+           Hello.class.getMethod("morning", String.class),
+           new Object[] { name });
+    }
+}
+```
+动态代理实际上是JDK在运行期动态创建class字节码并加载的过程
+
+
+- 定义一个InvocationHandler实例，它负责实现接口的方法调用；
+- 通过Proxy.newProxyInstance()创建interface实例，它需要3个参数：
+    - 使用的ClassLoader，通常就是接口类的ClassLoader；
+    - 需要实现的接口数组，至少需要传入一个接口进去；
+    - 用来处理接口方法调用的InvocationHandler实例。
+- 将返回的Object强制转型为接口。
+
 
 
