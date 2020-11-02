@@ -1419,5 +1419,31 @@ for (Annotation anno : annosOfName) {
 }
 ```
 
+#### IO
 
+内存有“易失性”的特点，所以必须把处理后的数据以某种方式输出。
 
+IO流是一种顺序读写数据的模式，它的特点是单向流动。
+
+IO流以`byte`（字节）为最小单位，因此也称为*字节流*。
+
+如果我们需要读写的是字符，并且字符不全是单字节表示的ASCII字符，那么，按照`char`来读写显然更方便，这种流称为*字符流*。Java提供了`Reader`和`Writer`表示字符流，字符流传输的最小数据单位是`char`。
+
+同步IO是指，读写IO时代码必须等待数据返回后才继续执行后续代码，它的优点是代码编写简单，缺点是CPU执行效率低。
+
+异步IO是指，读写IO时仅发出请求，然后立刻执行后续代码，它的优点是CPU执行效率高，缺点是代码编写复杂。
+
+##### File对象
+
+构造File对象时，既可以传入据对路径，也可以传入相对路径。
+
+```java
+File f = new File("C:\\Windows\\notepad.exe");
+// 假设当前目录是C:\Docs
+File f1 = new File("sub\\javac"); // 绝对路径是C:\Docs\sub\javac
+File f3 = new File(".\\sub\\javac"); // 绝对路径是C:\Docs\sub\javac
+File f3 = new File("..\\sub\\javac"); // 绝对路径是C:\sub\javac
+//可以用.表示当前目录，..表示上级目录
+```
+
+File对象有3种形式表示的路径，一种是`getPath()`，返回构造方法传入的路径，一种是`getAbsolutePath()`，返回绝对路径，一种是`getCanonicalPath`，它和绝对路径类似，但是返回的是规范路径。
