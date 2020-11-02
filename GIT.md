@@ -62,7 +62,8 @@ git push -u origin master
 github仓库代码在别的机器上更新了，怎么同步到另一台机器
 
 ```shell
-git pull master//从远端仓库拉取最新的项目版本
+//进入文件夹
+git pull origin master//从远端仓库拉取最新的项目版本
 git status//查看当前工作状态
 ```
 

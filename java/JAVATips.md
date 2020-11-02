@@ -1246,5 +1246,178 @@ public class HelloDynamicProxy implements Hello {
     - 用来处理接口方法调用的InvocationHandler实例。
 - 将返回的Object强制转型为接口。
 
+#### 注解
+
+放在JAVA源码的类、方法、字段、参数前的一段特殊“注释”，可以被编译器打包进入class文件，是一种用作标注的“元数据”。
+
+##### 注解的使用
+
+JAVA的注解分为三类
+- 由编译器使用的注解(这类注解不会被编译进入.class文件，它们在编译后就被编译器扔掉了)
+   - @Overrride 让编译器检查该方法是否正确实现了覆写
+   - @SuppressWarnings 告诉编译器忽略此处代码产生的警告
+- 需要工具处理.class文件使用的注解，
+比如有些工具会在加载class的时候，对class做动态修改，实现一些特殊的功能。这类注解会被编译进入.class文件，但加载结束后并不会存在于内存中。这类注解只被一些底层库使用，一般我们不必自己处理。
+- 在程序运行期能够读取的注解。在加载后一直存在于JVM中，这也是最常用的注解。例如，一个配置了@PostConstruct的方法会在调用构造方法后自动被调用（这是Java代码读取该注解实现的功能，JVM并不会识别该注解）。
+
+此外定义注解是也可以定义配置参数，包括:
+- 所有基本类型
+- String;
+- 枚举类型
+- 以上的数组
+
+配置参数必须是常量，注解的配置参数可以有默认值，缺少某个配置参数时将使用默认值。
+
+此外，大部分注解会有一个名为value的配置参数，对此参数赋值，可以只写常量，相当于省略了value参数。
+
+如果只写注解，相当于全部使用默认值。
+
+##### 注解的定义
+
+Java语言使用@interface语法来定义注解（Annotation），它的格式如下：
+
+```
+public @interface Report {
+    int type() default 0;
+    String level() default "info";
+    String value() default "";
+}
+//可以用default设定一个默认值（强烈推荐）。最常用的参数应当命名为value。
+```
+
+元注解可以修饰其他注解
+- @Target 定义Annotation能够被应用于源码的哪些位置
+    - ElementType.TYPE 类或接口
+    - ElementType.FIELD 字段
+    - ElementType.METHOD 方法
+    - ElementType.CONSTRUCTOR 构造方法
+    - ElementType.PARAMETER 方法参数
+    - @Target注解参数可以变为数组
+- Retention 定义Annotation的生命周期
+    - RetentionPolicy.SOURCE 仅仅编译器
+    - RetentionPolicy.CLASS 仅Class文件
+    - RetentionPolicy.RUNTIME 运行期
+    - 如果@Retention不存在，则该Annotation默认为CLASS。通常我们自定义的Annotation都是RUNTIME，所以，务必要加上@Retention(RetentionPolicy.RUNTIME)这个元注解
+- Repeatable 定义Annotation是否可重复,应用不广泛
+- @Inherited 定义子类是否可继承父类定义的注解。
+    - 针对@Target(ElementType.TYPE)类型的annotation有效，并且仅针对class的继承，对interface的继承无效
+
+
+```> // @Target注解参数数组
+> @Target({
+>     ElementType.METHOD,
+>     ElementType.FIELD
+> })
+> public @interface Report {
+>     ...
+> }
+> // @Retention 定义@Report的生命周期
+> @Retention(RetentionPolicy.RUNTIME)
+> public @interface Report {
+>     int type() default 0;
+>     String level() default "info";
+>     String value() default "";
+> }
+> //定义注解是否重复
+> @Repeatable(Reports.class)
+> @Target(ElementType.TYPE)
+> public @interface Report {
+>     int type() default 0;
+>     String level() default "info";
+>     String value() default "";
+> }
+> 
+> @Target(ElementType.TYPE)
+> public @interface Reports {
+>     Report[] value();
+> }
+> 
+> @Report(type=1, level="debug")
+> @Report(type=2, level="warning")
+> public class Hello {
+> }//经过@Repeatable修饰后，在某个类型声明处，就可以添加多个@Report注解：
+> 
+> //@Inherited
+> @Inherited
+> @Target(ElementType.TYPE)
+> public @interface Report {
+>     int type() default 0;
+>     String level() default "info";
+>     String value() default "";
+> > }//在使用的时候，如果一个类用到了@Report,那么它的子类默认也定义了该注解
+
+```
+
+
+
+如何定义注解
+- 用@interface 定义注解
+
+```java
+public @interface Report { }
+```
+- 添加参数、默认值
+```java
+public @interface Report {
+    int type() default 0;
+    String level() default "info";
+    String value() default "";
+}
+```
+- 用元注解配置注解
+```
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Report {
+    int type() default 0;
+    String level() default "info";
+    String value() default "";
+}
+//必须设置@Target和@Retention，@Retention一般设置为RUNTIME，
+因为我们自定义的注解通常要求在运行期读取。
+一般情况下，不必写@Inherited和@Repeatable
+```
+
+##### 注解的处理
+
+所有的注解都继承自java.lang.annotation.Annotation，读取注解，需要使用反射API。
+
+Java提供的使用反射API读取Annotation的方法包括
+- 判断某个注解是否存在于Class、Field、Method或Constructor
+    - Class.isAnnotationPresent(Class)
+    - Field.isAnnotationPresent(Class)
+    - Method.isAnnotationPresent(Class)
+    - Constructor.isAnnotationPresent(Class)
+- 使用反射API读取Annotation：
+    - Class.getAnnotation(Class)
+    - Field.getAnnotation(Class)
+    - Method.getAnnotation(Class)
+    - Constructor.getAnnotation(Class)
+
+使用反射API读取注解两种方式：
+- 先判断Annotation是否存在，如果存在，就直接读取
+- 直接读取Annotation，如果Annotation不存在，将返回null
+
+一次获取方法参数的所有注解就必须用一个二维数组来表示：
+```java
+public void hello(@NotNull @Range(max=5) String name, @NotNull String prefix) {
+}
+
+// 获取Method实例:
+Method m = ...
+// 获取所有参数的Annotation:
+Annotation[][] annos = m.getParameterAnnotations();
+// 第一个参数（索引为0）的所有Annotation:
+Annotation[] annosOfName = annos[0];
+for (Annotation anno : annosOfName) {
+    if (anno instanceof Range) { // @Range注解
+        Range r = (Range) anno;
+    }
+    if (anno instanceof NotNull) { // @NotNull注解
+        NotNull n = (NotNull) anno;
+    }
+}
+```
+
 
 
