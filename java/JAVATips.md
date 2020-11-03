@@ -1447,3 +1447,75 @@ File f3 = new File("..\\sub\\javac"); // 绝对路径是C:\sub\javac
 ```
 
 File对象有3种形式表示的路径，一种是`getPath()`，返回构造方法传入的路径，一种是`getAbsolutePath()`，返回绝对路径，一种是`getCanonicalPath`，它和绝对路径类似，但是返回的是规范路径。
+
+`File`对象既可以表示文件，也可以表示目录。特别要注意的是，构造一个`File`对象，即使传入的文件或目录不存在，代码也不会出错，因为构造一个`File`对象，并不会导致任何磁盘操作。只有当我们调用`File`对象的某些方法的时候，才真正进行磁盘操作。
+
+```java
+Boolean isFile()//判断File对象是否是一个已经存在的文件
+Boolean isDirectory()//判断File对象是否是一个已经存在的目录
+boolean canRead()//是否可读；
+boolean canWrite()//是否可写；
+boolean canExecute()//是否可执行；
+long length()//文件字节大小。
+//对目录而言，是否可执行表示能否列出它包含的文件和子目录
+```
+
+文件的创建和删除
+
+```java
+当File对象表示一个文件时，可以通过createNewFile()创建一个新文件，用delete()删除该文件
+File file = new File("/path/to/file");
+if (file.createNewFile()) {
+    // 文件创建成功:
+    // TODO:
+    if (file.delete()) {
+        // 删除文件成功:
+    }
+}
+//有些时候，程序需要读写一些临时文件，File对象提供了createTempFile()来创建一个临时文件，以及deleteOnExit()在JVM退出时自动删除该文件。
+public class Main {
+    public static void main(String[] args) throws IOException {
+        File f = File.createTempFile("tmp-", ".txt"); // 提供临时文件的前缀和后缀
+        f.deleteOnExit(); // JVM退出时自动删除
+        System.out.println(f.isFile());
+        System.out.println(f.getAbsolutePath());
+    }
+}
+```
+
+当File对象表示一个目录时，可以使用list()和listFiles()列出目录下的文件和子目录
+
+```java
+public class Main {
+    public static void main(String[] args) throws IOException {
+        File f = new File("C:\\Windows");
+        File[] fs1 = f.listFiles(); // 列出所有文件和子目录
+        printFiles(fs1);
+        File[] fs2 = f.listFiles(new FilenameFilter() { // 仅列出.exe文件
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".exe"); // 返回true表示接受该文件
+            }
+        });
+        printFiles(fs2);
+    }
+
+    static void printFiles(File[] files) {
+        System.out.println("==========");
+        if (files != null) {
+            for (File f : files) {
+                System.out.println(f);
+            }
+        }
+        System.out.println("==========");
+    }
+}
+```
+
+File对象如果表示一个目录，可以创建和删除目录
+
+```java
+boolean mkdir()：创建当前File对象表示的目录；
+boolean mkdirs()：创建当前File对象表示的目录，并在必要时将不存在的父目录也创建出来；
+boolean delete()：删除当前File对象表示的目录，当前目录必须为空才能删除成功。
+```
+
